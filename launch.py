@@ -6,6 +6,7 @@ import fooocus_version
 from modules.launch_util import is_installed, run, python, \
     run_pip, repo_dir, git_clone, requirements_met, script_path, dir_repos
 from modules.model_loader import load_file_from_url
+# from modules.path import modelfile_path, lorafile_path, clip_vision_path, controlnet_path
 from modules.path import modelfile_path, lorafile_path
 
 REINSTALL_ALL = False
@@ -17,10 +18,10 @@ def prepare_environment():
                                    f"pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url {torch_index_url}")
     requirements_file = os.environ.get('REQS_FILE', "requirements_versions.txt")
 
-    xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.20')
+    xformers_package = os.environ.get('XFORMERS_PACKAGE', 'xformers==0.0.21')
 
     comfy_repo = os.environ.get('COMFY_REPO', "https://github.com/comfyanonymous/ComfyUI")
-    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "2bc12d3d22efb5c63ae3a7fc342bb2dd16b31735")
+    comfy_commit_hash = os.environ.get('COMFY_COMMIT_HASH', "62efc78a4b13b87ef0df51323fe1bd71b433fa11")
 
     print(f"Python {sys.version}")
     print(f"Fooocus version: {fooocus_version.version}")
@@ -63,26 +64,51 @@ lora_filenames = [
      'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_offset_example-lora_1.0.safetensors')
 ]
 
+clip_vision_filenames = [
+    ('clip_vision_g.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/revision/clip_vision_g.safetensors')
+]
+
+controlnet_filenames = [
+    ('control-lora-canny-rank128.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank128/control-lora-canny-rank128.safetensors'),
+    ('control-lora-canny-rank256.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-canny-rank256.safetensors'),
+    ('control-lora-depth-rank128.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank128/control-lora-depth-rank128.safetensors'),
+    ('control-lora-depth-rank256.safetensors',
+     'https://huggingface.co/stabilityai/control-lora/resolve/main/control-LoRAs-rank256/control-lora-depth-rank256.safetensors')
+]
+
 
 def download_models():
     for file_name, url in model_filenames:
         load_file_from_url(url=url, model_dir=modelfile_path, file_name=file_name)
     for file_name, url in lora_filenames:
         load_file_from_url(url=url, model_dir=lorafile_path, file_name=file_name)
+    for file_name, url in clip_vision_filenames:
+        load_file_from_url(url=url, model_dir=clip_vision_path, file_name=file_name)
+    for file_name, url in controlnet_filenames:
+        load_file_from_url(url=url, model_dir=controlnet_path, file_name=file_name)
     return
 
 
-def cuda_malloc():
+def clear_comfy_args():
     argv = sys.argv
     sys.argv = [sys.argv[0]]
-    import cuda_malloc
+    import comfy.cli_args
     sys.argv = argv
+
+
+def cuda_malloc():
+    import cuda_malloc
 
 
 prepare_environment()
 
-cuda_malloc()
+clear_comfy_args()
+# cuda_malloc()
 
-download_models()
+# download_models()
 
 from webui import *

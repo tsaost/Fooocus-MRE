@@ -1,14 +1,16 @@
-# Fooocus
+# Fooocus-MRE
 
-<img src="https://github.com/lllyasviel/Fooocus/assets/19834515/f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7" width=100%>
+![image](https://github.com/MoonRide303/Fooocus-MRE/assets/130458190/ce430ea0-0995-4067-98dd-cef1d7dc1ab6)
 
-Fooocus is an image generating software.
+Fooocus-MRE is an image generating software, enhanced variant of the [original Fooocus](https://github.com/lllyasviel/Fooocus) dedicated for a bit more advanced users.
 
-Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs:
+Fooocus-MRE is a rethinking of Stable Diffusion and Midjourney’s designs:
 
-* Learned from Stable Diffusion, the software is offline, open source, and free.
+* Learned from Stable Diffusion - the software is offline, open source, and free.
 
-* Learned from Midjourney, the manual tweaking is not needed, and users only need to focus on the prompts and images.
+* Learned from Midjourney - it provides high quality output with default settings, allowing users to focus on the prompts and images.
+
+* Learned from SD web UI and ComfyUI - more advanced users would like to have some control over image generation process.
 
 Fooocus has included and automated [lots of inner optimizations and quality improvements](#tech_list). Users can forget all those difficult technical parameters, and just enjoy the interaction between human and computer to "explore new mediums of thought and expanding the imaginative powers of the human species" `[1]`.
 
@@ -24,7 +26,7 @@ Fooocus also developed many "fooocus-only" features for advanced users to get pe
 
 You can directly download Fooocus with:
 
-**[>>> Click here to download <<<](https://github.com/lllyasviel/Fooocus/releases/download/1.0.35/Fooocus_win64_1-1-1035.7z)**
+**[>>> Click here to download <<<](https://github.com/MoonRide303/Fooocus-MRE/releases/download/v1.0.45/Fooocus-MRE-v1.0.45.7z)**
 
 After you download the file, please uncompress it, and then run the "run.bat".
 
@@ -39,16 +41,20 @@ In the first time you launch the software, it will automatically download models
 
 If you already have these files, you can copy them to the above locations to speed up installation.
 
+Note that if you see **"MetadataIncompleteBuffer"**, then your model files are corrupted. Please download models again.
+
 Below is a test on a relatively low-end laptop with **16GB System RAM** and **6GB VRAM** (Nvidia 3060 laptop). The speed on this machine is about 1.35 seconds per iteration. Pretty impressive – nowadays laptops with 3060 are usually at very acceptable price.
 
 ![image](https://github.com/lllyasviel/Fooocus/assets/19834515/938737a5-b105-4f19-b051-81356cb7c495)
 
-Note that the minimal requirement is **4GB Nvidia GPU memory (4GB VRAM)** and **8GB system memory (8GB RAM)**. This requires using Microsoft’s Virtual Swap technique, which is automatically enabled by your Windows installation in most cases, so you often do not need to do anything about it. However, if you are not sure, or if you manually turned it off (would anyone really do that?), you can enable it here:
+Note that the minimal requirement is **4GB Nvidia GPU memory (4GB VRAM)** and **8GB system memory (8GB RAM)**. This requires using Microsoft’s Virtual Swap technique, which is automatically enabled by your Windows installation in most cases, so you often do not need to do anything about it. However, if you are not sure, or if you manually turned it off (would anyone really do that?), or **if you see any "RuntimeError: CPUAllocator"**, you can enable it here:
 
 <details>
 <summary>Click here to the see the image instruction. </summary>
 
 ![image](https://github.com/lllyasviel/Fooocus/assets/19834515/2a06b130-fe9b-4504-94f1-2763be4476e9)
+
+**And make sure that you have at least 40GB free space on each drive if you still see "RuntimeError: CPUAllocator" !**
 
 </details>
 
@@ -56,11 +62,12 @@ Please open an issue if you use similar devices but still cannot achieve accepta
 
 ### Colab
 
-(Last tested - 2023 Aug 14)
+(Last tested - 2023 Aug 30)
 
 | Colab | Info
 | --- | --- |
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lllyasviel/Fooocus/blob/main/colab.ipynb) | Fooocus Colab (Official Version)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MoonRide303/Fooocus-MRE/blob/moonride-main/colab.ipynb) | Fooocus-MRE Colab (MoonRide Edition)
 
 Note that sometimes this Colab will say like "you must restart the runtime in order to use newly installed XX". This can be safely ignored.
 
@@ -70,8 +77,8 @@ Thanks to [camenduru](https://github.com/camenduru)'s codes!
 
 The command lines are
 
-    git clone https://github.com/lllyasviel/Fooocus.git
-    cd Fooocus
+    git clone https://github.com/MoonRide303/Fooocus-MRE.git
+    cd Fooocus-MRE
     conda env create -f environment.yaml
     conda activate fooocus
     pip install -r requirements_versions.txt
@@ -109,10 +116,37 @@ Below things are already inside the software, and **users do not need to do anyt
 
 [Click here to browse the advanced features.](https://github.com/lllyasviel/Fooocus/discussions/117)
 
+## MoonRide Edition Features
+
+1. Support for Image-2-Image mode.
+2. Support for Control-LoRA: Canny Edge (guiding diffusion using edge detection on input, see [Canny Edge description from SAI](https://huggingface.co/stabilityai/control-lora#canny-edge)).
+3. Support for Control-LoRA: Depth (guiding diffusion using depth information from input, see [Depth description from SAI](https://huggingface.co/stabilityai/control-lora#midas-and-clipdrop-depth)).
+4. Support for Control-LoRA: Revision (prompting with images, see [Revision description from SAI](https://huggingface.co/stabilityai/control-lora#revision)).
+5. Support for embeddings (use "embedding:embedding_name" syntax, ComfyUI style).
+6. Customizable sampling parameters (sampler, scheduler, steps, base / refiner switch point, CFG, CLIP Skip).
+7. Displaying full metadata for generated images in the UI.
+8. Support for JPEG format.
+9. Ability to save full metadata for generated images (as JSON or embedded in image, disabled by default).
+10. Ability to load prompt information from JSON and image files (if saved with metadata).
+11. Ability to change default values of UI settings (loaded from settings.json file - use settings-example.json as a template).
+12. Ability to change default paths (loaded from paths.json file - use paths-example.json as a template).
+13. Ability to retain input files names (when using Image-2-Image mode).
+14. Ability to generate multiple images using same seed (useful in Image-2-Image mode).
+15. Ability to generate images forever (right-click on Generate button to start or stop this mode).
+16. Ability to stop image generation.
+17. Official list of SDXL resolutions (as defined in [SDXL paper](https://arxiv.org/abs/2307.01952)).
+18. Compact resolution and style selection (thx to [runew0lf](https://github.com/runew0lf) for hints).
+19. Support for custom resolutions list (loaded from resolutions.json - use resolutions-example.json as a template).
+20. Support for custom resolutions - you can just type it now in Resolution field, like "1280x640".
+
 ## Thanks
 
-The codebase starts from an odd mixture of [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) and [ComfyUI](https://github.com/comfyanonymous/ComfyUI). (And they both use GPL license.)
+The codebase starts from an odd mixture of [Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) and [ComfyUI](https://github.com/comfyanonymous/ComfyUI). (And they both use GPL license.) MoonRide Edition is based on the [original Fooocus](https://github.com/lllyasviel/Fooocus). Big thanks to [AUTOMATIC1111](https://github.com/AUTOMATIC1111), [comfyanonymous](https://github.com/comfyanonymous), and [lllyasviel](https://github.com/lllyasviel) for providing those fantastic tools.
+
+Thanks to [Stability AI](https://github.com/Stability-AI) for researching and opening their Stable Diffusion model series, [OpenAI](https://github.com/openai) for CLIP and [mlfoundations](https://github.com/mlfoundations) for OpenCLIP, and [LAION AI](https://github.com/LAION-AI) for data sets on which those models could learn.
+
+Special thanks to [twri](https://github.com/twri) and [3Diva](https://github.com/3Diva) for creating additional SDXL styles available in Fooocus.
 
 ## Update Log
 
-The log is [here](update_log.md).
+The log for original version is [here](update_log.md), and for enhancements added in MRE [here](update_log_mre.md).

@@ -8,17 +8,28 @@ import comfy.model_management
 import comfy.utils
 
 from comfy.sd import load_checkpoint_guess_config
-from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode
-from comfy.sample import prepare_mask, broadcast_cond, load_additional_models, cleanup_additional_models
+from nodes import VAEDecode, EmptyLatentImage, CLIPTextEncode, VAEEncode, \
+    ConditioningZeroOut, CLIPVisionEncode, unCLIPConditioning, ControlNetApplyAdvanced
+from comfy.sample import prepare_mask, broadcast_cond, get_additional_models, cleanup_additional_models
+from comfy_extras.nodes_post_processing import ImageScaleToTotalPixels
+from comfy_extras.nodes_canny import Canny
 from modules.samplers_advanced import KSampler, KSamplerWithRefiner
 from modules.patch import patch_all
+from modules.path import embeddings_path
 
+comfy.model_management.DISABLE_SMART_MEMORY = True
 
 patch_all()
 opCLIPTextEncode = CLIPTextEncode()
 opEmptyLatentImage = EmptyLatentImage()
 opVAEDecode = VAEDecode()
-
+opVAEEncode = VAEEncode()
+opImageScaleToTotalPixels = ImageScaleToTotalPixels()
+opConditioningZeroOut = ConditioningZeroOut()
+opCLIPVisionEncode = CLIPVisionEncode()
+opUnCLIPConditioning = unCLIPConditioning()
+opCanny = Canny()
+opControlNetApplyAdvanced = ControlNetApplyAdvanced()
 
 class StableDiffusionModel:
     def __init__(self, unet, vae, clip, clip_vision):
@@ -38,7 +49,7 @@ class StableDiffusionModel:
 
 @torch.no_grad()
 def load_model(ckpt_filename):
-    unet, clip, vae, clip_vision = load_checkpoint_guess_config(ckpt_filename)
+    unet, clip, vae, clip_vision = load_checkpoint_guess_config(ckpt_filename, embedding_directory=embeddings_path)
     return StableDiffusionModel(unet=unet, clip=clip, vae=vae, clip_vision=clip_vision)
 
 
@@ -50,6 +61,16 @@ def load_lora(model, lora_filename, strength_model=1.0, strength_clip=1.0):
     lora = comfy.utils.load_torch_file(lora_filename, safe_load=True)
     unet, clip = comfy.sd.load_lora_for_models(model.unet, model.clip, lora, strength_model, strength_clip)
     return StableDiffusionModel(unet=unet, clip=clip, vae=model.vae, clip_vision=model.clip_vision)
+
+
+@torch.no_grad()
+def load_clip_vision(ckpt_filename):
+    return comfy.clip_vision.load(ckpt_filename)
+
+
+@torch.no_grad()
+def load_controlnet(ckpt_filename):
+    return comfy.controlnet.load_controlnet(ckpt_filename)
 
 
 @torch.no_grad()
@@ -65,6 +86,42 @@ def generate_empty_latent(width=1024, height=1024, batch_size=1):
 @torch.no_grad()
 def decode_vae(vae, latent_image):
     return opVAEDecode.decode(samples=latent_image, vae=vae)[0]
+
+
+@torch.no_grad()
+def encode_vae(vae, pixels):
+    return opVAEEncode.encode(pixels=pixels, vae=vae)[0]
+
+
+@torch.no_grad()
+def upscale(image, megapixels=1.0):
+    return opImageScaleToTotalPixels.upscale(image=image, upscale_method='bicubic', megapixels=megapixels)[0]
+
+
+@torch.no_grad()
+def zero_out(conditioning):
+    return opConditioningZeroOut.zero_out(conditioning=conditioning)[0]
+
+
+@torch.no_grad()
+def encode_clip_vision(clip_vision, image):
+    return opCLIPVisionEncode.encode(clip_vision=clip_vision, image=image)[0]
+
+
+@torch.no_grad()
+def apply_adm(conditioning, clip_vision_output, strength, noise_augmentation):
+    return opUnCLIPConditioning.apply_adm(conditioning=conditioning, clip_vision_output=clip_vision_output, strength=strength, noise_augmentation=noise_augmentation)[0]
+
+
+@torch.no_grad()
+def detect_edge(image, low_threshold, high_threshold):
+    return opCanny.detect_edge(image=image, low_threshold=low_threshold, high_threshold=high_threshold)[0]
+
+
+@torch.no_grad()
+def apply_controlnet(positive, negative, control_net, image, strength, start_percent, end_percent):
+    return opControlNetApplyAdvanced.apply_controlnet(positive=positive, negative=negative, control_net=control_net,
+        image=image, strength=strength, start_percent=start_percent, end_percent=end_percent)
 
 
 def get_previewer(device, latent_format):
@@ -95,12 +152,12 @@ def get_previewer(device, latent_format):
 def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sampler_name='dpmpp_2m_sde_gpu',
              scheduler='karras', denoise=1.0, disable_noise=False, start_step=None, last_step=None,
              force_full_denoise=False, callback_function=None):
-    # SCHEDULERS = ["normal", "karras", "exponential", "simple", "ddim_uniform"]
+    # SCHEDULERS = ["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform"]
     # SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral",
     #             "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
-    #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
+    #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
 
-    seed = seed if isinstance(seed, int) else random.randint(1, 2 ** 64)
+    seed = seed if isinstance(seed, int) else random.randint(0, 2**63 - 1)
 
     device = comfy.model_management.get_torch_device()
     latent_image = latent["samples"]
@@ -133,7 +190,9 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
     if noise_mask is not None:
         noise_mask = prepare_mask(noise_mask, noise.shape, device)
 
-    comfy.model_management.load_model_gpu(model)
+    real_model = None
+    models, inference_memory = get_additional_models(positive, negative, model.model_dtype())
+    comfy.model_management.load_models_gpu([model] + models, comfy.model_management.batch_area_memory(noise.shape[0] * noise.shape[2] * noise.shape[3]) + inference_memory)
     real_model = model.model
 
     noise = noise.to(device)
@@ -141,8 +200,6 @@ def ksampler(model, positive, negative, latent, seed=None, steps=30, cfg=7.0, sa
 
     positive_copy = broadcast_cond(positive, noise.shape[0], device)
     negative_copy = broadcast_cond(negative, noise.shape[0], device)
-
-    models = load_additional_models(positive, negative, model.model_dtype())
 
     sampler = KSampler(real_model, steps=steps, device=device, sampler=sampler_name, scheduler=scheduler,
                        denoise=denoise, model_options=model.model_options)
@@ -167,12 +224,12 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
                           seed=None, steps=30, refiner_switch_step=20, cfg=7.0, sampler_name='dpmpp_2m_sde_gpu',
                           scheduler='karras', denoise=1.0, disable_noise=False, start_step=None, last_step=None,
                           force_full_denoise=False, callback_function=None):
-    # SCHEDULERS = ["normal", "karras", "exponential", "simple", "ddim_uniform"]
+    # SCHEDULERS = ["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform"]
     # SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral",
     #             "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
-    #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
+    #             "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
 
-    seed = seed if isinstance(seed, int) else random.randint(1, 2 ** 64)
+    seed = seed if isinstance(seed, int) else random.randint(0, 2**63 - 1)
 
     device = comfy.model_management.get_torch_device()
     latent_image = latent["samples"]
@@ -205,7 +262,8 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
     if noise_mask is not None:
         noise_mask = prepare_mask(noise_mask, noise.shape, device)
 
-    comfy.model_management.load_model_gpu(model)
+    models, inference_memory = get_additional_models(positive, negative, model.model_dtype())
+    comfy.model_management.load_models_gpu([model] + models, comfy.model_management.batch_area_memory(noise.shape[0] * noise.shape[2] * noise.shape[3]) + inference_memory)
 
     noise = noise.to(device)
     latent_image = latent_image.to(device)
@@ -215,8 +273,6 @@ def ksampler_with_refiner(model, positive, negative, refiner, refiner_positive, 
 
     refiner_positive_copy = broadcast_cond(refiner_positive, noise.shape[0], device)
     refiner_negative_copy = broadcast_cond(refiner_negative, noise.shape[0], device)
-
-    models = load_additional_models(positive, negative, model.model_dtype())
 
     sampler = KSamplerWithRefiner(model=model, refiner_model=refiner, steps=steps, device=device,
                                   sampler=sampler_name, scheduler=scheduler,

@@ -1,1 +1,2 @@
-version = '1.0.40'
+version = '1.0.45 MRE'
+full_version = 'Fooocus ' + version
