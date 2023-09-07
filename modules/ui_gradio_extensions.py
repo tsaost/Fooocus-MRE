@@ -49,7 +49,8 @@ def reload_javascript():
     notificationSoundPath = os.path.join(script_path, "notification.mp3")
     print("notificationSoundPath", notificationSoundPath)
     if os.path.exists(notificationSoundPath):
-         audio_notification = gr.Audio(interactive=False, value=notificationSoundPath, elem_id="audio_notification", visible=False)
+        print("notification.mp3 found")
+        audio_notification = gr.Audio(interactive=False, value=notificationSoundPath, elem_id="audio_notification", visible=False)
 # [TST] 2023-09-05 17:02:40
 
 
