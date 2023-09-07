@@ -31,6 +31,7 @@ controlnet_depth_hash = ''
 
 
 def refresh_base_model(name):
+    print("refresh_base_model:", name)
     global xl_base, xl_base_hash, xl_base_patched, xl_base_patched_hash
     if xl_base_hash == str(name):
         return
@@ -46,7 +47,11 @@ def refresh_base_model(name):
         print('Model not supported. Fooocus only support SDXL model as the base model.')
         xl_base = None
         xl_base_hash = ''
-        refresh_base_model(modules.path.default_base_model_name)
+        if name != modules.path.default_base_model_name: 
+            refresh_base_model(modules.path.default_base_model_name)
+        else:
+            print("Cannot load modules.path.default_base_model_name",
+                  modules.path.default_base_model_name)
         xl_base_hash = name
         xl_base_patched = xl_base
         xl_base_patched_hash = ''
@@ -68,7 +73,7 @@ def refresh_refiner_model(name):
     if name == 'None':
         xl_refiner = None
         xl_refiner_hash = ''
-        print(f'Refiner unloaded.')
+        print(f'Refiner == None, so unloaded.')
         return
 
     filename = os.path.join(modules.path.modelfile_path, name)
@@ -82,7 +87,7 @@ def refresh_refiner_model(name):
         print('Model not supported. Fooocus only support SDXL refiner as the refiner.')
         xl_refiner = None
         xl_refiner_hash = ''
-        print(f'Refiner unloaded.')
+        print(f'Refiner not found, so unloaded.')
         return
 
     xl_refiner_hash = name

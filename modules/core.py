@@ -49,6 +49,7 @@ class StableDiffusionModel:
 
 @torch.no_grad()
 def load_model(ckpt_filename):
+    print("load_model: ", ckpt_filename)
     unet, clip, vae, clip_vision = load_checkpoint_guess_config(ckpt_filename, embedding_directory=embeddings_path)
     return StableDiffusionModel(unet=unet, clip=clip, vae=vae, clip_vision=clip_vision)
 
