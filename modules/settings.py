@@ -7,19 +7,20 @@ from os.path import exists
 
 def load_settings():
     settings = {}
-    settings['advanced_mode'] = False
-    settings['image_number'] = 2
-    settings['save_metadata_json'] = False
-    settings['save_metadata_image'] = False
+    settings['advanced_mode'] = True
+    settings['image_number'] = 1
+    settings['save_metadata_json'] = True
+    settings['save_metadata_image'] = True
     settings['output_format'] = 'png'
     settings['seed_random'] = True
     settings['same_seed_for_all'] = False
     settings['seed'] = 0
-    settings['style'] = 'cinematic-default'
+    # settings['style'] = 'cinematic-default'
+    settings['style'] = 'None'
     settings['prompt'] = ''
     settings['negative_prompt'] = ''
-    settings['performance'] = 'Speed'
-    settings['custom_steps'] = 24
+    settings['performance'] = 'Custom'
+    settings['custom_steps'] = 30
     settings['custom_switch'] = 0.75
     settings['img2img_mode'] = False
     settings['img2img_start_step'] = 0.06
@@ -50,7 +51,7 @@ def load_settings():
     settings['cfg'] = 7.0
     settings['base_clip_skip'] = -2
     settings['refiner_clip_skip'] = -2
-    settings['sharpness'] = 2.0
+    settings['sharpness'] = 1.0
     settings['base_model'] = modules.path.default_base_model_name
     settings['refiner_model'] = modules.path.default_refiner_model_name
     settings['lora_1_model'] = modules.path.default_lora_name
@@ -71,6 +72,7 @@ def load_settings():
                 for k in settings.keys():
                     if k in settings_obj:
                         settings[k] = settings_obj[k]
+                        print(k, settings[k])
             except Exception as e:
                 print(e)
             finally:
