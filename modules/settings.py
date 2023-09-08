@@ -10,7 +10,7 @@ def load_settings():
     settings = {}
     settings['advanced_mode'] = True
     settings['image_number'] = 1
-    settings['save_metadata_json'] = True
+    settings['save_metadata_json'] = False
     settings['save_metadata_image'] = True
     settings['output_format'] = 'png'
     settings['seed_random'] = True
@@ -21,7 +21,7 @@ def load_settings():
     settings['prompt'] = ''
     settings['negative_prompt'] = ''
     settings['performance'] = 'Custom'
-    settings['custom_steps'] = 30
+    settings['custom_steps'] = 24
     settings['custom_switch'] = 0.75
     settings['img2img_mode'] = False
     settings['img2img_start_step'] = 0.06
@@ -46,7 +46,8 @@ def load_settings():
     settings['revision_strength_2'] = 1.0
     settings['revision_strength_3'] = 1.0
     settings['revision_strength_4'] = 1.0
-    settings['resolution'] = get_resolution_string(1152, 896)
+    # settings['resolution'] = get_resolution_string(1152, 896)
+    settings['resolution'] = get_resolution_string(896, 1152)
     settings['sampler'] = 'dpmpp_2m_sde_gpu'
     settings['scheduler'] = 'karras'
     settings['cfg'] = 7.0
