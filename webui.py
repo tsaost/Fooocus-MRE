@@ -40,7 +40,8 @@ def generate_clicked(*args):
         time.sleep(0.01)
         if len(worker.outputs) > 0:
             flag, product = worker.outputs.pop(0)
-            if flag == 'preview':
+            if False: # flag == 'preview':
+                # Disable preview completely
                 percentage, title, image = product
                 yield gr.update(interactive=False, visible=False), gr.update(interactive=True, visible=True), \
                     gr.update(visible=True, value=modules.html.make_progress_html(percentage, title)), \
