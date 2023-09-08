@@ -36,7 +36,7 @@
     "revision_strength_2": 1.0,
     "revision_strength_3": 1.0,
     "revision_strength_4": 1.0,
-    "resolution": "896×1152",
+    "resolution": "896×1152 (7:9)",
     "sampler": "dpmpp_2m_sde_gpu",
     "scheduler": "karras",
     "cfg": 7.0,
