@@ -66,14 +66,18 @@ def load_settings():
     settings['lora_5_model'] = 'None'
     settings['lora_5_weight'] = modules.path.default_lora_weight
 
-    print("os.getcwd()", os.getcwd())
-    homedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    settings_path = os.path.join(homedir, 'settings.json')
+    # print("os.getcwd()", os.getcwd())
+    # homedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    # settings_path = os.path.join(homedir, 'settings.json')
+    settings_path = 'settings.json'
     if exists(settings_path):
         print("Found:", settings_path)
         with open(settings_path) as settings_file:
             try:
                 settings_obj = json.load(settings_file)
+                print("settings.keys()", settings.keys())
+                print("settings_obj.keys()", settings_obj.keys())
+                print("settings_obj", settings_obj)
                 for k in settings.keys():
                     if k in settings_obj:
                         settings[k] = settings_obj[k]
