@@ -3,6 +3,7 @@ import modules.path
 
 from modules.resolutions import get_resolution_string
 from os.path import exists
+import os
 
 
 def load_settings():
@@ -65,9 +66,9 @@ def load_settings():
     settings['lora_5_model'] = 'None'
     settings['lora_5_weight'] = modules.path.default_lora_weight
 
-    homedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+    print("os.getcwd()", os.getcwd())
+    homedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     settings_path = os.path.join(homedir, 'settings.json')
-
     if exists(settings_path):
         print("Found:", settings_path)
         with open(settings_path) as settings_file:
