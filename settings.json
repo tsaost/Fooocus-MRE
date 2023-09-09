@@ -3,7 +3,7 @@
     "image_number": 1,
     "save_metadata_json": false,
     "save_metadata_image": true,
-    "output_format": "jpg",
+    "output_format": "png",
     "seed_random": false,
     "same_seed_for_all": false,
     "seed": 0,
