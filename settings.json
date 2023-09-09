@@ -7,7 +7,7 @@
     "seed_random": false,
     "same_seed_for_all": false,
     "seed": 0,
-    "style": "cinematic-default",
+    "style": "None",
     "prompt": "",
     "negative_prompt": "",
     "performance": "Speed",
